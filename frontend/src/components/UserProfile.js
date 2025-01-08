@@ -6,8 +6,9 @@ const UserProfile = ({ users, updateUser }) => {
   const { id } = useParams();
   const [user, setUser] = useState(null);
   const [formData, setFormData] = useState({ name: '', email: '', avatar: '' });
-  const [isEditing, setIsEditing] = useState(false); // To toggle between view and edit modes
+  const [isEditing, setIsEditing] = useState(false); // Toggle view/edit modes
   const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState(''); // For validation errors
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -23,8 +24,22 @@ const UserProfile = ({ users, updateUser }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Validate the email format
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Standard email validation regex
+    return emailRegex.test(email);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Email validation
+    if (!validateEmail(formData.email)) {
+      setErrorMessage('Please enter a valid email address.');
+      return;
+    }
+
+    setErrorMessage(''); // Clear error if validation passes
 
     try {
       const response = await fetch(`http://localhost:3002/users/${id}`, {
@@ -38,7 +53,7 @@ const UserProfile = ({ users, updateUser }) => {
 
       if (response.ok) {
         const updatedUser = await response.json();
-        setSuccessMessage('User updated successfully');
+        setSuccessMessage('User updated successfully.');
         updateUser(updatedUser.user); // Notify parent
         setUser(updatedUser.user);
         setIsEditing(false); // Exit editing mode
@@ -76,6 +91,7 @@ const UserProfile = ({ users, updateUser }) => {
               onChange={handleChange}
               className="form-input"
             />
+            {errorMessage && <p className="error-message">{errorMessage}</p>} {/* Show error */}
           </div>
           <div className="form-group">
             <label>Avatar URL:</label>
